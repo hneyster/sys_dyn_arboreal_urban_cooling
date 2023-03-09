@@ -1,0 +1,2170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0" xmlns:isee="http://iseesystems.com/XMILE">
+	<header>
+		<smile version="1.0" namespace="std, isee" uses_arrays="1" uses_submodels=""/>
+		<name>vanheat_array</name>
+		<uuid>33461e56-216b-4ae0-90e4-3a489e429c83</uuid>
+		<vendor>isee systems, inc.</vendor>
+		<product version="2.1.5" isee:build_number="2629" isee:saved_by_v1="true" lang="en">Stella Architect</product>
+	</header>
+	<sim_specs isee:sim_duration="1.5" isee:simulation_delay="0.0104895" isee:restore_on_start="false" method="Euler" time_units="hour" isee:instantaneous_flows="false" isee:loop_scores="true" isee:loop_exhaustive_allowed="1000">
+		<start>1</start>
+		<stop>144</stop>
+		<dt reciprocal="true">60</dt>
+	</sim_specs>
+	<dimensions>
+		<dim name="Dimension_1">
+			<elem name="conifer"/>
+			<elem name="broadleaf"/>
+		</dim>
+	</dimensions>
+	<isee:prefs show_module_prefix="true" live_update_on_drag="true" show_restore_buttons="false" layer="model" interface_scale_ui="true" interface_max_page_width="10000" interface_max_page_height="10000" interface_min_page_width="0" interface_min_page_height="0" rerun_on_structure_change="false" saved_runs="5" keep="false" rifp="true"/>
+	<isee:multiplayer_settings include_chat="true" allow_observers="false" advance_time_increment="1" max_advance_time_in_ms="0" observer_start_page="home_page" enabled="false"/>
+	<isee:time_formats default_format="Builtin">
+		<isee:time_format name="Builtin" type="adaptive"/>
+	</isee:time_formats>
+	<default_format/>
+	<data>
+		<import isee:overwrite="false" isee:timevarying="true" isee:interpolate="i" resource="r../20200801_DNI.csv"/>
+	</data>
+	<isee:sensi_specs_list active_index="0">
+		<isee:sensi_specs name="SensitivityLAI" method="grid">
+			<isee:variable starting_value="4.9" ending_value="8.6" type="incremental" seed="12345" name="tree.LAI[conifer]" num_samples="2"/>
+		</isee:sensi_specs>
+		<isee:sensi_specs name="Sensitivity_r" method="sobol_sequence" runs="5"/>
+	</isee:sensi_specs_list>
+	<isee:optimizer_specs_list active_index="0">
+		<isee:optimizer_specs name="Optimization" method="Powell" additional_starts="0" report_interval="1" confidence_range="0"/>
+	</isee:optimizer_specs_list>
+	<isee:payoff_specs_list>
+		<isee:payoff_specs name="Payoff"/>
+	</isee:payoff_specs_list>
+	<model_units>
+		<unit name="Dimensionless">
+			<eqn>1</eqn>
+			<alias>dmnl</alias>
+			<alias>unitless</alias>
+			<alias>fraction</alias>
+		</unit>
+		<unit name="Meters">
+			<eqn/>
+			<alias>m</alias>
+			<alias>meter</alias>
+		</unit>
+		<unit name="Radians">
+			<eqn/>
+			<alias>rad</alias>
+			<alias>radian</alias>
+		</unit>
+		<unit name="Days">
+			<eqn/>
+			<alias>day</alias>
+		</unit>
+		<unit name="Hours">
+			<eqn/>
+			<alias>hr</alias>
+			<alias>hour</alias>
+		</unit>
+		<unit name="Degrees C">
+			<eqn/>
+			<alias>degc</alias>
+			<alias>degree C</alias>
+		</unit>
+		<unit name="Joules">
+			<eqn/>
+			<alias>j</alias>
+			<alias>joule</alias>
+		</unit>
+		<unit name="Watts">
+			<eqn/>
+			<alias>w</alias>
+			<alias>watt</alias>
+		</unit>
+		<unit name="Seconds">
+			<eqn/>
+			<alias>s</alias>
+			<alias>second</alias>
+		</unit>
+	</model_units>
+	<model>
+		<variables>
+			<stock name="T" access="output">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>temp</eqn>
+				<inflow>temp_in</inflow>
+				<outflow>temp_out</outflow>
+				<non_negative/>
+				<units>Degrees C</units>
+			</stock>
+			<flow name="temp in">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>heat_coef*(solar_heat + anthropogenic_heat + longwave_emitted/2)</eqn>
+				<units>Degrees C/hour</units>
+			</flow>
+			<aux name="anthropogenic\nheat">
+				<eqn>electric_heat + fuel_heat + human_heat</eqn>
+			</aux>
+			<aux name="electric heat">
+				<eqn>0</eqn>
+				<units>J/m^2</units>
+			</aux>
+			<aux name="fuel heat">
+				<eqn>0</eqn>
+				<units>J/m^2</units>
+			</aux>
+			<aux name="human heat">
+				<eqn>0</eqn>
+				<units>J/m^2</units>
+			</aux>
+			<flow name="temp out">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>heat_coef*(convection  +  conduction + radiative_heat_loss)</eqn>
+				<units>Degrees C/hour</units>
+			</flow>
+			<aux name="conduction">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>thermal_conductivity_ground*3600*(T-ground_temperature)/depth</eqn>
+				<units>J/hr</units>
+			</aux>
+			<aux name="convection">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>3600*convective_heat_transfer_coefficient*(T- air_temperature)*(1-fraction_trees) + under_tree_convection</eqn>
+				<units>J/hr</units>
+			</aux>
+			<aux name="radiative heat\nloss">
+				<doc>/2 because only half of the radiation is going down </doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>emissivity *sigma* (T^4)*3600</eqn>
+			</aux>
+			<aux name="thermal conductivity\nground">
+				<eqn>3.2</eqn>
+				<units>W/m K</units>
+			</aux>
+			<aux name="ground temperature">
+				<doc>from https://www.architectmagazine.com/technology/going-underground_o</doc>
+				<eqn>8</eqn>
+				<units>C</units>
+			</aux>
+			<aux name="depth">
+				<doc>from https://pubs.usgs.gov/pp/1203/report.pdf</doc>
+				<eqn>2</eqn>
+				<units>Meters</units>
+			</aux>
+			<aux name="air\ntemperature">
+				<doc>from https://geography.name/surface-and-air-temperature/
+
+(T_air_high-T_air_low)/2*SIN(solar_hour_angle-PI/2) + (T_air_high+T_air_low)/2
+
+https://weatherspark.com/d/145244/8/1/Average-Weather-on-August-1-at-P.-Meadows-Coastal-Station-Automatic-Weather-Reporting-System-Canada#Figures-Temperature</doc>
+				<eqn>(T_air_high-T_air_low)/2*SIN(solar_hour_angle-PI/2)+ (T_air_high+T_air_low)/2</eqn>
+				<units>C</units>
+			</aux>
+			<aux name="convective heat\ntransfer coefficient">
+				<doc>from https://weatherspark.com/y/24985/Average-Weather-in-Burlington-Vermont-United-States-Year-Round</doc>
+				<eqn>(11.8 + 4.2*wind_velocity)</eqn>
+			</aux>
+			<aux name="emissivity">
+				<doc>https://www.flukeprocessinstruments.com/en-us/service-and-support/knowledge-center/infrared-t echnology/emissivity-metals.
+
+Grossman-Clarke 2005 </doc>
+				<eqn>.9</eqn>
+			</aux>
+			<aux name="fraction trees">
+				<doc>percentage from 
+https://indicators.report/indicators/i-70/</doc>
+				<eqn>.17</eqn>
+			</aux>
+			<aux name="albedo built">
+				<doc>all values of albedo from https://cdn.intechopen.com/pdfs/29929/InTech-Albedo_effect_and_energy_efficiency_of_cities.pdf</doc>
+				<eqn>.114</eqn>
+				<units>fraction</units>
+			</aux>
+			<aux name="sigma">
+				<eqn>5.67 * 10^-8</eqn>
+				<units>W/M^2K^4</units>
+			</aux>
+			<aux name="temp">
+				<eqn>22</eqn>
+			</aux>
+			<aux name="DNI">
+				<eqn>0</eqn>
+				<units>W/m^2</units>
+			</aux>
+			<aux name="solar hour angle">
+				<doc>https://www.timeanddate.com/sun/canada/vancouver?month=8&amp;year=2022</doc>
+				<eqn>1/3.82*(TIME-sunrise)</eqn>
+				<units>Radians</units>
+			</aux>
+			<aux name="sunrise">
+				<eqn>5.75</eqn>
+			</aux>
+			<aux name="VHC">
+				<doc>volumetric heat capacity -- from paper </doc>
+				<eqn>3*10^6</eqn>
+				<units>J/m^3/K</units>
+			</aux>
+			<aux name="height">
+				<eqn>.3</eqn>
+				<units>m</units>
+			</aux>
+			<aux name="heat coef">
+				<eqn>1/(VHC*height)</eqn>
+				<units>K*m^2/J</units>
+			</aux>
+			<aux name="wind velocity">
+				<eqn>4.54</eqn>
+				<units>m/s</units>
+			</aux>
+			<aux name="solar heat">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>(1 - albedo_built)*DNI*3600*MAX(0, SIN(solar_hour_angle))*solar_dec_correction*(1-fraction_trees) + extinction</eqn>
+				<units>J/m^2/hr</units>
+			</aux>
+			<module name="tree" isee:label="">
+				<connect to=".extinction" from="tree.extinction"/>
+				<connect2 to="extinction" from="tree.extinction"/>
+				<connect to=".longwave_emitted" from="tree.longwave_emitted"/>
+				<connect2 to="longwave_emitted" from="tree.longwave_emitted"/>
+				<connect to=".T_leaf" from="tree.T_leaf"/>
+				<connect2 to="T_leaf" from="tree.T_leaf"/>
+				<connect to="tree.air_temperature" from=".air_temperature"/>
+				<connect2 to="tree.air_temperature" from="air_temperature"/>
+				<connect to="tree.Converter_1" from=".fraction_trees"/>
+				<connect2 to="tree.Converter_1" from="fraction_trees"/>
+				<connect to="tree.DNI" from=".DNI"/>
+				<connect2 to="tree.DNI" from="DNI"/>
+				<connect to="tree.emissivity" from=".emissivity"/>
+				<connect2 to="tree.emissivity" from="emissivity"/>
+				<connect to="tree.sigma" from=".sigma"/>
+				<connect2 to="tree.sigma" from="sigma"/>
+				<connect to="tree.solar_dec_correction" from=".solar_dec_correction"/>
+				<connect2 to="tree.solar_dec_correction" from="solar_dec_correction"/>
+				<connect to="tree.sun_anlgle" from=".solar_hour_angle"/>
+				<connect2 to="tree.sun_anlgle" from="solar_hour_angle"/>
+				<connect to="tree.T_bulk" from=".T"/>
+				<connect2 to="tree.T_bulk" from="T"/>
+				<connect to="tree.wind_velocity" from=".wind_velocity"/>
+				<connect2 to="tree.wind_velocity" from="wind_velocity"/>
+			</module>
+			<aux name="T air low">
+				<eqn>12.2</eqn>
+			</aux>
+			<aux name="T air high">
+				<doc>based off bowen island average https://www.accuweather.com/en/ca/bowen-island/v0n/july-weather/53179</doc>
+				<eqn>20.5</eqn>
+			</aux>
+			<aux name="longwave emitted" access="input">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>{Enter equation for use when not hooked up to other models}</eqn>
+				<units>J/m^2</units>
+			</aux>
+			<aux name="declination">
+				<eqn>23.45*2*PI/360*SIN(2*PI*(284+doy)/365)</eqn>
+				<units>Radians</units>
+			</aux>
+			<aux name="doy">
+				<doc>day of year of August 1 2020</doc>
+				<eqn>214</eqn>
+				<units>day</units>
+			</aux>
+			<aux name="latitude">
+				<eqn>49.2827*2*PI/360</eqn>
+				<units>Radians</units>
+			</aux>
+			<aux name="solar dec correction">
+				<eqn>COS(latitude-declination)</eqn>
+			</aux>
+			<aux name="Converter 2">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>3600*698.24*(0.00144*(MEAN(T,  air_temperature))^(0.3)*wind_velocity^0.7+0.00097*(T-air_temperature)^0.3)</eqn>
+			</aux>
+			<aux name="extinction" access="input">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>{Enter equation for use when not hooked up to other models}</eqn>
+			</aux>
+			<aux name="under tree convection">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn> 3600*fraction_trees*convective_heat_transfer_coefficient*(T-T_leaf)</eqn>
+			</aux>
+			<stock name="T leaf" access="input">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>{Enter equation for use when not hooked up to other models}</eqn>
+				<non_negative/>
+				<units>Degrees C</units>
+			</stock>
+			<aux name="solardiff">
+				<eqn>solar_heat[broadleaf]-solar_heat[conifer]</eqn>
+			</aux>
+			<aux name="conddiff">
+				<eqn>conduction[broadleaf]-conduction[conifer]</eqn>
+			</aux>
+			<aux name="longwavediff">
+				<eqn>(longwave_emitted[broadleaf]/2-radiative_heat_loss[broadleaf])-(longwave_emitted[conifer]/2-radiative_heat_loss[conifer])</eqn>
+			</aux>
+			<aux name="convectiondiff">
+				<eqn>convection[broadleaf]-convection[conifer]</eqn>
+			</aux>
+			<aux name="Tdiff">
+				<eqn>T[broadleaf] - T[conifer]</eqn>
+			</aux>
+		</variables>
+		<views>
+			<style color="black" background="white" font_style="normal" font_weight="normal" text_decoration="none" text_align="center" vertical_text_align="center" font_color="black" font_family="Arial" font_size="10pt" padding="2" border_color="black" border_width="thin" border_style="none">
+				<text_box color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt"/>
+				<isee:loop_indicator color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt"/>
+				<numeric_display color="blue" background="white" font_size="9pt" border_width="thin" border_style="solid" isee:transparent="false"/>
+				<graph color="black" background="white" font_size="12pt" axis_color="#666666" grid_color="#C8C8C8" isee:graph_area_color="white" legend_position="bottom" isee:transparent="false" isee:hide_border="false" axis_title_font_style="normal" axis_title_font_weight="normal" axis_title_text_decoration="none" axis_title_text_align="center" axis_title_vertical_text_align="center" axis_title_font_color="black" axis_title_font_family="Arial" axis_title_font_size="12pt" axis_title_text_padding="2" axis_title_text_border_color="black" axis_title_text_border_width="thin" axis_title_text_border_style="none" axis_label_font_style="normal" axis_label_font_weight="normal" axis_label_text_decoration="none" axis_label_text_align="center" axis_label_vertical_text_align="center" axis_label_font_color="black" axis_label_font_family="Arial" axis_label_font_size="9pt" axis_label_text_padding="2" axis_label_text_border_color="black" axis_label_text_border_width="thin" axis_label_text_border_style="none">
+					<isee:series_styles>
+						<isee:series_style color="blue" thickness="1"/>
+						<isee:series_style color="red" thickness="1" pen_style="dot_dashed"/>
+						<isee:series_style color="fuchsia" thickness="1" pen_style="dotted"/>
+						<isee:series_style color="#008F44" thickness="1" pen_style="dashed"/>
+						<isee:series_style color="#FF7F00" thickness="1"/>
+						<isee:series_style color="#7F00FF" thickness="1" pen_style="dot_dashed"/>
+						<isee:series_style color="#0CA0FF" thickness="1" pen_style="dotted"/>
+						<isee:series_style color="lime" thickness="1" pen_style="dashed"/>
+						<isee:series_style color="#FF007F" thickness="1"/>
+						<isee:series_style color="aqua" thickness="1" pen_style="dot_dashed"/>
+						<isee:series_style color="#F586FF" thickness="1" pen_style="dotted"/>
+						<isee:series_style color="black" thickness="1" pen_style="dashed"/>
+						<isee:series_style color="#C8C8C8" thickness="1"/>
+					</isee:series_styles>
+				</graph>
+				<table color="black" background="#E0E0E0" text_align="right" font_size="12pt" orientation="vertical" wrap_text="false" isee:auto_fit="true" isee:use_alternate_row_colors="false" isee:unlimited_table_length="false" blank_column_width="80" column_width="160" interval="1" report_balances="beginning" report_flows="summed" header_font_style="normal" header_font_weight="normal" header_text_decoration="none" header_text_align="center" header_vertical_text_align="center" header_font_color="black" header_font_family="Arial" header_font_size="12pt" header_text_padding="2" header_text_border_color="black" header_text_border_width="thin" header_text_border_style="none"/>
+				<button color="black" background="#E0E0E0" font_size="12pt" border_width="thin" border_style="solid" transparent="false" corner_radius="0" isee:flat="false" icon_side="top" isee:highlight_on_hover="false" isee:highlight_color="#959595"/>
+				<isee:annotation color="black" background="#E0E0E0" font_size="12pt" border_width="thin" border_style="solid" transparent="false" corner_radius="0" isee:flat="false" icon_side="top" isee:highlight_on_hover="false" isee:highlight_color="#959595" popup_corner_radius="0" popup_background_color="#FFFECF"/>
+				<slider color="#66CC66" background="#E0E0E0" font_size="12pt" num_ticks="3" label_side="top" wrap_title="true" vertical="false" isee:fancy_appearance="false" isee:show_hover_tip="when_deciding" input_expands="true" input_width="100"/>
+				<isee:dual_slider color="black" background="white" font_size="12pt" num_ticks="3" label_side="top" wrap_title="true" isee:show_hover_tip="when_deciding" input_expands="true" input_width="100"/>
+				<isee:sim_speed_slider color="black" background="white"/>
+				<isee:time_slider color="#E95F74" background="silver"/>
+				<isee:pie_input color="black" background="white" font_size="12pt" legend_position="bottom" isee:transparent="false"/>
+				<knob color="#66CC66" background="#E0E0E0" font_size="12pt" label_side="bottom" wrap_title="true"/>
+				<numeric_input color="black" background="#E0E0E0" font_size="12pt" label_side="left" wrap_title="true" input_expands="false" input_width="100"/>
+				<switch color="black" background="#E0E0E0" font_size="12pt" label_side="top" wrap_title="true" isee:appearance="switch" isee:on_color="green"/>
+				<options color="black" background="white" appearance="radio-buttons" arrangement="vertical"/>
+				<graphical_input color="black" background="#E0E0E0" font_size="12pt" isee:show_hover_tip="true"/>
+				<group_input color="black" background="#E0E0E0" font_size="12pt"/>
+				<lamp color="black" background="white" font_size="9pt"/>
+				<gauge color="black" background="white" font_size="9pt" needle_color="#F09F72" bar_color="#EEEEEE" bar_progress_color="black" appearance="radial" num_major_ticks="11" num_minor_ticks="11" show_numeric_value="true"/>
+				<isee:spatial_map color="black" background="white" font_size="12pt"/>
+				<isee:animation_object color="black" background="white" font_size="12pt"/>
+				<isee:navigation_widget color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt" padding="6 8" border_color="#999999" border_width="thin" border_style="solid" item_spacing="6" appearance="tabs" corner_radius="4" selected_item_color="black" selected_item_background="white" item_background="#DDDDDD"/>
+				<isee:shape color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt" border_width="thin" border_style="solid" opacity="1" transparent_background="true"/>
+				<isee:selector color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt"/>
+				<isee:iframe color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt" border_width="thin" border_style="solid"/>
+				<isee:financial_table color="black" background="#E0E0E0" text_align="right" font_size="12pt" hide_border="false" auto_fit="true" first_column_width="250" other_column_width="100" header_font_style="normal" header_font_weight="bold" header_text_decoration="none" header_text_align="center" header_vertical_text_align="center" header_font_color="black" header_font_family="Arial" header_font_size="14pt" header_text_padding="2" header_text_border_color="black" header_text_border_width="thin" header_text_border_style="none"/>
+			</style>
+			<view isee:show_pages="false" background="white" page_width="822" page_height="575" isee:page_cols="3" isee:page_rows="6" isee:popup_graphs_are_comparative="false" isee:enable_non_negative_highlights="false" type="stock_flow">
+				<style color="black" background="white" font_style="normal" font_weight="normal" text_decoration="none" text_align="center" vertical_text_align="center" font_color="black" font_family="Arial" font_size="10pt" padding="2" border_color="black" border_width="thin" border_style="none">
+					<stock color="blue" background="white" font_color="blue" font_size="9pt" label_side="top">
+						<shape type="rectangle" width="45" height="35"/>
+					</stock>
+					<flow color="blue" background="white" font_color="blue" font_size="9pt" label_side="bottom"/>
+					<isee:placeholder color="#228B22" background="white" font_color="#228B22" font_size="9pt" label_side="bottom"/>
+					<module color="blue" background="white" font_color="blue" font_size="9pt" label_side="top">
+						<shape type="rectangle" width="55" height="45"/>
+					</module>
+					<aux color="blue" background="white" font_color="blue" font_size="9pt" label_side="bottom">
+						<shape type="circle" radius="18"/>
+					</aux>
+					<group color="red" background="white" font_color="red" font_size="9pt"/>
+					<connector color="#FF007F" background="white" font_color="#FF007F" font_size="9pt" isee:thickness="1"/>
+					<text_box color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt"/>
+					<isee:loop_indicator color="black" background="white"/>
+					<numeric_display color="blue" background="white" font_size="9pt" isee:transparent="false"/>
+					<graph color="black" background="white" font_size="12pt" axis_color="#666666" grid_color="#C8C8C8" isee:graph_area_color="white" legend_position="bottom" isee:transparent="false" isee:hide_border="false" axis_title_font_style="normal" axis_title_font_weight="normal" axis_title_text_decoration="none" axis_title_text_align="center" axis_title_vertical_text_align="center" axis_title_font_color="black" axis_title_font_family="Arial" axis_title_font_size="12pt" axis_title_text_padding="2" axis_title_text_border_color="black" axis_title_text_border_width="thin" axis_title_text_border_style="none" axis_label_font_style="normal" axis_label_font_weight="normal" axis_label_text_decoration="none" axis_label_text_align="center" axis_label_vertical_text_align="center" axis_label_font_color="black" axis_label_font_family="Arial" axis_label_font_size="9pt" axis_label_text_padding="2" axis_label_text_border_color="black" axis_label_text_border_width="thin" axis_label_text_border_style="none">
+						<isee:series_styles>
+							<isee:series_style color="blue" thickness="1"/>
+							<isee:series_style color="red" thickness="1" pen_style="dot_dashed"/>
+							<isee:series_style color="fuchsia" thickness="1" pen_style="dotted"/>
+							<isee:series_style color="#008F44" thickness="1" pen_style="dashed"/>
+							<isee:series_style color="#FF7F00" thickness="1"/>
+							<isee:series_style color="#7F00FF" thickness="1" pen_style="dot_dashed"/>
+							<isee:series_style color="#0CA0FF" thickness="1" pen_style="dotted"/>
+							<isee:series_style color="lime" thickness="1" pen_style="dashed"/>
+							<isee:series_style color="#FF007F" thickness="1"/>
+							<isee:series_style color="aqua" thickness="1" pen_style="dot_dashed"/>
+							<isee:series_style color="#F586FF" thickness="1" pen_style="dotted"/>
+							<isee:series_style color="black" thickness="1" pen_style="dashed"/>
+							<isee:series_style color="#C8C8C8" thickness="1"/>
+						</isee:series_styles>
+					</graph>
+					<table color="black" background="#E0E0E0" text_align="right" font_size="12pt" orientation="vertical" wrap_text="false" isee:auto_fit="true" isee:use_alternate_row_colors="false" isee:unlimited_table_length="false" blank_column_width="80" column_width="160" interval="1" report_balances="beginning" report_flows="summed" header_font_style="normal" header_font_weight="normal" header_text_decoration="none" header_text_align="center" header_vertical_text_align="center" header_font_color="black" header_font_family="Arial" header_font_size="12pt" header_text_padding="2" header_text_border_color="black" header_text_border_width="thin" header_text_border_style="none"/>
+				</style>
+				<stock x="310.5" y="235.25" name="T"/>
+				<flow x="207" y="239" name="temp in">
+					<pts>
+						<pt x="114" y="239"/>
+						<pt x="288" y="239"/>
+					</pts>
+				</flow>
+				<aux x="108" y="167" name="anthropogenic\nheat"/>
+				<connector uid="1" angle="323.973">
+					<from>anthropogenic_heat</from>
+					<to>temp_in</to>
+				</connector>
+				<aux x="40" y="149" name="electric heat"/>
+				<connector uid="3" angle="15.9454">
+					<from>electric_heat</from>
+					<to>anthropogenic_heat</to>
+				</connector>
+				<aux x="48" y="94" name="fuel heat"/>
+				<aux x="130" y="94" name="human heat"/>
+				<connector uid="5" angle="293.199">
+					<from>human_heat</from>
+					<to>anthropogenic_heat</to>
+				</connector>
+				<flow x="418.5" y="239" name="temp out">
+					<pts>
+						<pt x="333" y="239"/>
+						<pt x="516" y="239"/>
+					</pts>
+				</flow>
+				<connector uid="4" angle="341.565">
+					<from>fuel_heat</from>
+					<to>anthropogenic_heat</to>
+				</connector>
+				<aux x="397" y="330" name="conduction"/>
+				<connector uid="6" angle="76.7069">
+					<from>conduction</from>
+					<to>temp_out</to>
+				</connector>
+				<aux x="341" y="308" name="convection"/>
+				<connector uid="8" angle="41.6794">
+					<from>convection</from>
+					<to>temp_out</to>
+				</connector>
+				<aux x="531" y="308" name="radiative heat\nloss"/>
+				<connector uid="9" angle="148.478">
+					<from>radiative_heat_loss</from>
+					<to>temp_out</to>
+				</connector>
+				<aux x="327.167" y="436.167" name="thermal conductivity\nground"/>
+				<aux x="384" y="408.167" name="ground temperature"/>
+				<aux x="430.833" y="439.5" name="depth"/>
+				<connector uid="19" angle="56.6642">
+					<from>thermal_conductivity_ground</from>
+					<to>conduction</to>
+				</connector>
+				<connector uid="20" angle="46.3972">
+					<from>ground_temperature</from>
+					<to>conduction</to>
+				</connector>
+				<connector uid="22" angle="84.6855">
+					<from>depth</from>
+					<to>conduction</to>
+				</connector>
+				<aux x="269" y="326" name="air\ntemperature"/>
+				<connector uid="26" angle="28.0245">
+					<from>air_temperature</from>
+					<to>convection</to>
+				</connector>
+				<aux x="302" y="382.5" name="convective heat\ntransfer coefficient"/>
+				<connector uid="28" angle="75.0686">
+					<from>convective_heat_transfer_coefficient</from>
+					<to>convection</to>
+				</connector>
+				<aux x="610.917" y="321" name="emissivity"/>
+				<aux x="54.1667" y="595.333" name="fraction trees"/>
+				<aux x="144.167" y="436.167" name="albedo built"/>
+				<connector uid="45" angle="73.9204">
+					<from>albedo_built</from>
+					<to>solar_heat</to>
+				</connector>
+				<stacked_container uid="47" x="1233.58" y="591.917" width="452" height="405">
+					<graph isee:graph_area_color="white" width="452" height="405" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="6" isee:fill_intensity="0.1" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="tree.T_leaf[conifer]"/>
+						</plot>
+						<plot color="red" pen_style="dot_dashed" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="tree.T_leaf[conifer]"/>
+						</plot>
+						<plot color="fuchsia" pen_style="dotted" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name="tree.T_leaf[broadleaf]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<stacked_container uid="53" x="722.857" y="884.32" width="493" height="382.002">
+					<graph isee:graph_area_color="white" width="493" height="382.002" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="red" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="T[broadleaf]"/>
+						</plot>
+						<plot color="#282CF7" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="T[broadleaf]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<aux x="592.917" y="271" name="sigma"/>
+				<connector uid="67" angle="191.336">
+					<from>sigma</from>
+					<to>radiative_heat_loss</to>
+				</connector>
+				<aux x="327.167" y="158.167" name="temp"/>
+				<connector uid="73" angle="294.417">
+					<from>T</from>
+					<to>convection</to>
+				</connector>
+				<connector uid="74" angle="314.009">
+					<from>T</from>
+					<to>conduction</to>
+				</connector>
+				<connector uid="76" angle="2.89451">
+					<from>T</from>
+					<to>radiative_heat_loss</to>
+				</connector>
+				<stacked_container uid="77" x="774.072" y="38.167" width="689" height="366">
+					<table interval="DT" report_balances="beginning" report_flows="summed" width="689" height="366">
+						<item type="time"/>
+						<item>
+							<entity name="tree.longwave_emitted[conifer]"/>
+						</item>
+						<item>
+							<entity name="radiative_heat_loss[conifer]"/>
+						</item>
+						<item>
+							<entity name="convection[conifer]"/>
+						</item>
+						<item>
+							<entity name="T[conifer]"/>
+						</item>
+						<item>
+							<entity name="T[broadleaf]"/>
+						</item>
+						<item>
+							<entity name="convection[broadleaf]"/>
+						</item>
+					</table>
+				</stacked_container>
+				<aux x="48" y="261.75" name="DNI"/>
+				<connector uid="87" angle="298.811">
+					<from>DNI</from>
+					<to>solar_heat</to>
+				</connector>
+				<aux x="40" y="348" name="solar hour angle"/>
+				<aux x="195" y="390.167" name="sunrise"/>
+				<connector uid="94" angle="164.781">
+					<from>sunrise</from>
+					<to>solar_hour_angle</to>
+				</connector>
+				<stacked_container uid="110" x="204" y="1007.32" width="501.917" height="935">
+					<graph width="501.917" height="935" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="#FF7F00" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="conduction[conifer]"/>
+						</plot>
+						<plot color="#FFFB00" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="radiative_heat_loss[conifer]"/>
+						</plot>
+						<plot color="#0CA0FF" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name="tree.longwave_emitted[conifer]"/>
+						</plot>
+						<plot color="#FF007F" isee:keep_zero_visible="true" pen_width="1" index="3" show_y_axis="true">
+							<entity name="solar_heat[conifer]"/>
+							<scale max="2200000"/>
+						</plot>
+						<plot color="#942192" isee:keep_zero_visible="true" pen_width="1" index="4" show_y_axis="true">
+							<entity name="convection[conifer]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<aux x="506" y="179.714" name="VHC"/>
+				<aux x="503" y="105.714" name="height"/>
+				<aux x="461" y="149" name="heat coef"/>
+				<connector uid="111" angle="145.685">
+					<from>VHC</from>
+					<to>heat_coef</to>
+				</connector>
+				<connector uid="112" angle="229.448">
+					<from>height</from>
+					<to>heat_coef</to>
+				</connector>
+				<connector uid="113" angle="244.722">
+					<from>heat_coef</from>
+					<to>temp_out</to>
+				</connector>
+				<connector uid="115" angle="176.987">
+					<from>heat_coef</from>
+					<to>temp_in</to>
+				</connector>
+				<aux x="269" y="466" name="wind velocity"/>
+				<connector uid="116" angle="68.4356">
+					<from>wind_velocity</from>
+					<to>convective_heat_transfer_coefficient</to>
+				</connector>
+				<aux x="97" y="308" name="solar heat"/>
+				<connector uid="118" angle="32.0989">
+					<from>solar_heat</from>
+					<to>temp_in</to>
+				</connector>
+				<connector uid="29" angle="172.057">
+					<from>emissivity</from>
+					<to>radiative_heat_loss</to>
+				</connector>
+				<module x="690.667" y="576" name="tree"/>
+				<connector uid="161" angle="350.921">
+					<from>T</from>
+					<to>tree</to>
+				</connector>
+				<connector uid="89" angle="40.6013">
+					<from>solar_hour_angle</from>
+					<to>solar_heat</to>
+				</connector>
+				<connector uid="165" angle="6.1155">
+					<from>DNI</from>
+					<to>tree</to>
+				</connector>
+				<connector uid="166" angle="27.8973">
+					<from>solar_hour_angle</from>
+					<to>tree</to>
+				</connector>
+				<connector uid="167" angle="14.0362">
+					<from>wind_velocity</from>
+					<to>tree</to>
+				</connector>
+				<aux x="195" y="312" name="T air low"/>
+				<aux x="225" y="326" name="T air high"/>
+				<connector uid="168" angle="347.905">
+					<from>T_air_high</from>
+					<to>air_temperature</to>
+				</connector>
+				<connector uid="169" angle="27.2161">
+					<from>T_air_low</from>
+					<to>air_temperature</to>
+				</connector>
+				<connector uid="173" angle="42.3295">
+					<from>fraction_trees</from>
+					<to>tree</to>
+				</connector>
+				<connector uid="174" angle="347.508">
+					<from>emissivity</from>
+					<to>tree</to>
+				</connector>
+				<connector uid="175" angle="327.626">
+					<from>sigma</from>
+					<to>tree</to>
+				</connector>
+				<aux font_style="italic" font_weight="bold" x="254" y="76" name="longwave emitted"/>
+				<connector uid="176" angle="131.132" isee:autocreated="true">
+					<from>tree</from>
+					<to>longwave_emitted</to>
+				</connector>
+				<connector uid="177" angle="225">
+					<from>longwave_emitted</from>
+					<to>temp_in</to>
+				</connector>
+				<connector uid="179" angle="79.1144">
+					<from>fraction_trees</from>
+					<to>solar_heat</to>
+				</connector>
+				<connector uid="180" angle="354.337" isee:autocreated="true">
+					<from>air_temperature</from>
+					<to>tree</to>
+				</connector>
+				<stacked_container uid="183" x="670.11" y="1374.5" width="349.747" height="271.002">
+					<graph isee:graph_area_color="white" width="349.747" height="271.002" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="convection[conifer]"/>
+						</plot>
+						<plot color="fuchsia" pen_style="dotted" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="conduction[conifer]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<stacked_container uid="184" x="734.11" y="1681.5" width="349.747" height="453.002">
+					<graph isee:graph_area_color="white" width="349.747" height="453.002" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="convection[conifer]"/>
+						</plot>
+						<plot color="fuchsia" pen_style="dotted" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="conduction[conifer]"/>
+						</plot>
+						<plot color="#008F44" pen_style="dashed" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name="radiative_heat_loss[conifer]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<stacked_container uid="188" x="1040.08" y="1290.32" width="493" height="382.002">
+					<graph isee:graph_area_color="white" width="493" height="382.002" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="T[conifer]"/>
+						</plot>
+						<plot color="red" pen_style="dot_dashed" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="T[broadleaf]"/>
+						</plot>
+						<plot color="fuchsia" pen_style="dotted" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name="T[conifer]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<aux x="40" y="408.167" name="declination"/>
+				<aux x="36.1667" y="466" name="doy"/>
+				<connector uid="189" angle="73.8694">
+					<from>doy</from>
+					<to>declination</to>
+				</connector>
+				<aux x="97" y="413.167" name="latitude"/>
+				<aux x="97" y="372.167" name="solar dec correction"/>
+				<connector uid="190" angle="32.2756">
+					<from>declination</from>
+					<to>solar_dec_correction</to>
+				</connector>
+				<connector uid="191" angle="69.9663">
+					<from>latitude</from>
+					<to>solar_dec_correction</to>
+				</connector>
+				<connector uid="192" angle="68.308">
+					<from>solar_dec_correction</from>
+					<to>solar_heat</to>
+				</connector>
+				<connector uid="193" angle="6.05031" isee:autocreated="true">
+					<from>solar_dec_correction</from>
+					<to>tree</to>
+				</connector>
+				<connector uid="194" angle="22.9321">
+					<from>solar_hour_angle</from>
+					<to>air_temperature</to>
+				</connector>
+				<aux x="418.5" y="691" name="Converter 2"/>
+				<connector uid="196" angle="294.922">
+					<from>T</from>
+					<to>Converter_2</to>
+				</connector>
+				<connector uid="197" angle="308.29">
+					<from>air_temperature</from>
+					<to>Converter_2</to>
+				</connector>
+				<connector uid="198" angle="311.186">
+					<from>wind_velocity</from>
+					<to>Converter_2</to>
+				</connector>
+				<connector uid="199" angle="45.8379">
+					<from>fraction_trees</from>
+					<to>convection</to>
+				</connector>
+				<aux font_style="italic" font_weight="bold" x="497" y="527" name="extinction"/>
+				<connector uid="200" angle="190.801" isee:autocreated="true">
+					<from>tree</from>
+					<to>extinction</to>
+				</connector>
+				<connector uid="201" angle="132.797">
+					<from>extinction</from>
+					<to>solar_heat</to>
+				</connector>
+				<stacked_container uid="202" x="1292" y="1811.32">
+					<graph width="350" height="250" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="convection[conifer]"/>
+						</plot>
+						<plot color="red" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="convection[broadleaf]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<aux x="497" y="585.583" name="under tree convection"/>
+				<stock font_style="italic" font_weight="bold" x="579.417" y="634.214" name="T leaf"/>
+				<connector uid="204" angle="140.862">
+					<from>T_leaf</from>
+					<to>under_tree_convection</to>
+				</connector>
+				<connector uid="205" angle="23.1451">
+					<from>fraction_trees</from>
+					<to>under_tree_convection</to>
+				</connector>
+				<connector uid="206" angle="292.834">
+					<from>convective_heat_transfer_coefficient</from>
+					<to>under_tree_convection</to>
+				</connector>
+				<connector uid="207" angle="265.865">
+					<from>T</from>
+					<to>under_tree_convection</to>
+				</connector>
+				<connector uid="208" angle="95.6024">
+					<from>under_tree_convection</from>
+					<to>convection</to>
+				</connector>
+				<stacked_container uid="211" x="204" y="1958.32" width="501.917" height="970.002">
+					<graph width="501.917" height="970.002" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="#FF7F00" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="conduction[broadleaf]"/>
+						</plot>
+						<plot color="#FFFB00" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="radiative_heat_loss[broadleaf]"/>
+						</plot>
+						<plot color="#0CA0FF" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name="tree.longwave_emitted[broadleaf]"/>
+						</plot>
+						<plot color="#FF007F" isee:keep_zero_visible="true" pen_width="1" index="3" show_y_axis="true">
+							<entity name="solar_heat[broadleaf]"/>
+						</plot>
+						<plot color="#942192" isee:keep_zero_visible="true" pen_width="1" index="4" show_y_axis="true">
+							<entity name="convection[broadleaf]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<aux x="243" y="756" name="solardiff"/>
+				<aux x="426.36" y="860" name="conddiff"/>
+				<aux x="225" y="675.75" name="longwavediff"/>
+				<aux x="327.167" y="794.417" name="convectiondiff"/>
+				<aux x="108" y="673" name="Tdiff"/>
+				<connector uid="212" angle="263.774">
+					<from>T</from>
+					<to>Tdiff</to>
+				</connector>
+				<connector uid="213" angle="351.254">
+					<from>solar_heat</from>
+					<to>solardiff</to>
+				</connector>
+				<connector uid="214" angle="293.499">
+					<from>longwave_emitted</from>
+					<to>longwavediff</to>
+				</connector>
+				<connector uid="215" angle="241.39">
+					<from>radiative_heat_loss</from>
+					<to>longwavediff</to>
+				</connector>
+				<connector uid="216" angle="316.975">
+					<from>convection</from>
+					<to>convectiondiff</to>
+				</connector>
+				<connector uid="217" angle="334.799">
+					<from>conduction</from>
+					<to>conddiff</to>
+				</connector>
+				<stacked_container uid="218" x="714.083" y="2151.32" width="501.917" height="700.002">
+					<graph width="501.917" height="700.002" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="#FF7F00" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="conddiff"/>
+						</plot>
+						<plot color="#0CA0FF" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="longwavediff"/>
+						</plot>
+						<plot color="#FF007F" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name="solardiff"/>
+						</plot>
+						<plot color="#942192" isee:keep_zero_visible="true" pen_width="1" index="3" show_y_axis="true">
+							<entity name="convectiondiff"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<stacked_container uid="219" x="1221" y="2088" width="552.5" height="797.5">
+					<graph width="552.5" height="797.5" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="convection[*]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+			</view>
+			<view background="white" page_width="1066" page_height="600" home_view="true" type="interface">
+				<style/>
+			</view>
+			<isee:templates>
+				<view background="white" page_width="1066" page_height="600" type="template">
+					<style/>
+				</view>
+			</isee:templates>
+			<isee:stories/>
+		</views>
+	</model>
+	<model name="tree">
+		<variables>
+			<aux name="evapotranspiration">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>evapotranspiration_rate*latent_heat_vaporization_water*Converter_1</eqn>
+			</aux>
+			<aux name="longwave absorbed">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>emissivity *sigma*(T_bulk^4)*3600*Converter_1</eqn>
+				<units>J/hr</units>
+			</aux>
+			<aux name="latent heat vaporization water">
+				<doc>https://www.britannica.com/science/latent-heat</doc>
+				<eqn>2450</eqn>
+				<units>J/kg</units>
+			</aux>
+			<aux name="emissivity" access="input">
+				<doc>https://sci-hub.se/10.1017/9781107339217.011
+fig 10.3</doc>
+				<eqn>.98</eqn>
+			</aux>
+			<aux name="albedo leaf">
+				<doc>all values of albedo from https://cdn.intechopen.com/pdfs/29929/InTech-Albedo_effect_and_energy_efficiency_of_cities.pdf</doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<element subscript="conifer">
+					<eqn>.08</eqn>
+				</element>
+				<element subscript="broadleaf">
+					<eqn>.12</eqn>
+				</element>
+				<units>fraction</units>
+			</aux>
+			<aux name="sigma" access="input">
+				<eqn>5.67 * 10^-8</eqn>
+				<units>W/M^2K^4</units>
+			</aux>
+			<aux name="DNI" access="input">
+				<eqn>0</eqn>
+				<units>W/m^2</units>
+			</aux>
+			<aux name="sun anlgle" access="input">
+				<doc>https://www.timeanddate.com/sun/canada/vancouver?month=8&amp;year=2022</doc>
+				<eqn>1.02*SIN(1/3.82*(TIME-sunrise))</eqn>
+				<units>Radians</units>
+			</aux>
+			<aux name="heat coef">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>Converter_1*(1/heat_capacity_leaf)</eqn>
+				<units>K*m^2/J</units>
+			</aux>
+			<aux name="wind velocity" access="input">
+				<eqn>5</eqn>
+				<units>m/s</units>
+			</aux>
+			<aux name="direct solar heat">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>MIN(1, LAI)*(1 - albedo_leaf)*DNI*3600*MAX(0, SIN(sun_anlgle))*(1-photosynthetic_efficiency)*(Converter_1)*solar_dec_correction</eqn>
+				<units>J/hr</units>
+			</aux>
+			<aux name="C leaf">
+				<doc>Water vapor concentration of evaporating surfaces within the leaf 
+
+
+Farquhar and Raschke (1978) did not find any mesophyll cell wall
+resistance in leaves of several herbaceous species and
+concluded that the water vapor concentration at the
+evaporating surfaces is equal to its saturation vapor
+Concentration.” 
+</doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>(M_w*e_s_leaf)/(R*T_leaf)</eqn>
+				<units>kg/m^3</units>
+			</aux>
+			<aux name="C air">
+				<doc>Water vapor concentration in the air </doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>(M_w*e_air)/(R*air_temperature)</eqn>
+				<units>kg/m^3</units>
+			</aux>
+			<aux name="LAI">
+				<doc>“The slow growth and long leaf life spans of
+conifer leaves are associated with their higher LAI
+values (up to 20) over those of deciduous forest stands
+(3 to 6) (Waring and Schlesinger, 1985),”
+
+p. 50 https://www.uv.mx/personal/tcarmona/files/2019/02/Pallardy-2008.pdf
+
+
+Transpiration per unit of land area generally increases with
+greater Leaf Area Index unless canopy boundary layer
+resistance is so high that energy input controls evapo-
+ration (Landsberg, 1986).</doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<element subscript="conifer">
+					<eqn>8.6</eqn>
+				</element>
+				<element subscript="broadleaf">
+					<eqn>4.9</eqn>
+				</element>
+			</aux>
+			<aux name="evapotranspiration rate">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>((C_leaf-C_air)/(r_tot))*LAI*3600</eqn>
+				<units>kg/m^2/hr</units>
+			</aux>
+			<aux name="M w">
+				<eqn>.018</eqn>
+				<units>kg/mol</units>
+			</aux>
+			<aux name="R">
+				<doc>universal gas constant</doc>
+				<eqn>8.314</eqn>
+				<units>J/mol/K</units>
+			</aux>
+			<aux name="e s leaf">
+				<doc>saturation vapor pressure
+CMIO guide 
+https://www.eas.ualberta.ca/jdwilson/EAS372_13/Vomel_CIRES_satvpformulae.html</doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>6.112*EXP((17.62*T_leaf)/(T_leaf+243.12))*100</eqn>
+				<units>Pa</units>
+			</aux>
+			<aux name="e s air">
+				<doc>vapor pressure
+
+# rh*e_s_top/100</doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>6.112*EXP((17.62*air_temperature)/(air_temperature+243.12))*100</eqn>
+				<units>Pa</units>
+			</aux>
+			<aux name="rh">
+				<doc>relative humidity</doc>
+				<eqn>72.7</eqn>
+			</aux>
+			<stock name="T leaf" access="output">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>temp</eqn>
+				<inflow>leaf_temp_in</inflow>
+				<outflow>leaf_temp_out</outflow>
+				<non_negative/>
+				<units>Degrees C</units>
+			</stock>
+			<aux name="e air">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn> rh*e_s_air/100</eqn>
+			</aux>
+			<aux name="r tot leaf">
+				<doc>Equation 12.7 https://www.uv.mx/personal/tcarmona/files/2019/02/Pallardy-2008.pdf 
+
+total leaf resistance to water loss </doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>(r_tot_abaxial*r_tot_adaxial)/(r_tot_abaxial+r_tot_adaxial)</eqn>
+				<units>s/m</units>
+			</aux>
+			<aux name="r tot abaxial">
+				<doc>eq 12.6 
+
+https://www.uv.mx/personal/tcarmona/files/2019/02/Pallardy-2008.pdf</doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>1/( 1/r_cuticular_abaxial + 1/(r_stomata_abaxial + r_intracellular_abaxial) ) + r_air_abaxial</eqn>
+				<units>s/m</units>
+			</aux>
+			<aux name="r cuticular abaxial">
+				<doc>.1 to 1
+
+https://udspace.udel.edu/bitstream/handle/19716/2830/Chapter%207.%20Transpiration%20and%20the%20Ascent%20of%20Sap.pdf?sequence=8&amp;isAllowed=y
+fig 7.1</doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<element subscript="conifer">
+					<eqn>30303</eqn>
+				</element>
+				<element subscript="broadleaf">
+					<eqn>8500</eqn>
+				</element>
+				<units>s/m</units>
+			</aux>
+			<aux name="r intracellular abaxial">
+				<doc>table 12.3 Pallardy2008 </doc>
+				<eqn>17.5</eqn>
+				<units>s/m</units>
+			</aux>
+			<aux name="r stomata abaxial">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<element subscript="conifer">
+					<eqn>140/(stomata_aperture[conifer])</eqn>
+				</element>
+				<element subscript="broadleaf">
+					<eqn>470/(stomata_aperture[broadleaf])</eqn>
+				</element>
+			</aux>
+			<aux name="r air abaxial">
+				<doc>
+table 7.4
+
+r_air
+
+https://udspace.udel.edu/bitstream/handle/19716/2830/Chapter%207.%20Transpiration%20and%20the%20Ascent%20of%20Sap.pdf?sequence=8&amp;isAllowed=y
+
+
+Also small, deeply dissected leaves and
+compound leaves with small leafl ets tend to be cooler
+than large leaves because their thinner boundary layers
+permit more rapid transfer of sensible heat. Tibbals
+et al. (1964) reported that in quiet air broad leaves are
+considerably warmer than pine needles exposed to the
+same incident radiation. 
+
+(pallardy2008 -- p. 331) </doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<element subscript="conifer">
+					<eqn>1/(5.0 + 74.4*wind_velocity)*1000</eqn>
+				</element>
+				<element subscript="broadleaf">
+					<eqn>1/((3.2*wind_velocity+.52)/100)</eqn>
+				</element>
+				<units>s/m</units>
+			</aux>
+			<aux name="r tot">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>r_tot_leaf</eqn>
+				<units>s/m</units>
+			</aux>
+			<flow name="open">
+				<doc>depends on:
+ght intensity,
+CO 2 concentration within leaf air spaces, vapor con-
+centration difference between leaf and air, tem-
+perature, plant water status, plant hormones and
+age
+
+page 329</doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>0*wind_velocity + 0*intercellular_CO2</eqn>
+			</flow>
+			<flow name="leaf temp in">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>heat_coef*heat_in</eqn>
+				<units>Degrees C/hour</units>
+			</flow>
+			<flow name="leaf temp out">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>heat_coef*heat_out</eqn>
+				<units>Degrees C/hour</units>
+			</flow>
+			<stock name="T bulk" access="input">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<non_negative/>
+				<units>Degrees C</units>
+			</stock>
+			<aux name="temp">
+				<eqn>22</eqn>
+			</aux>
+			<aux name="heat capacity leaf">
+				<doc>https://sci-hub.se/10.1017/9781107339217.011
+
+equation 10.11</doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>(leaf_mass_per_area/(1-frac_water))*((1-frac_water)*c_dry_leaf+(frac_water*c_water))</eqn>
+				<units>J/(K*m^2)</units>
+			</aux>
+			<aux name="longwave emitted" access="output">
+				<doc>It&apos;s 2* because of both sides of leaf. Equation 10.2 
+https://sci-hub.se/10.1017/9781107339217.011 </doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>2*tree_emissivity*sigma*(T_leaf^4)*3600*LAI*Converter_1</eqn>
+				<units>J/m^2</units>
+			</aux>
+			<aux name="cp">
+				<doc>is the specific heat of moist air at constant pressure (cp= 29.2 J mol–1 K–1 is represen-
+tative; equation [3.59])
+
+https://sci-hub.se/10.1017/9781107339217.011
+pg 155</doc>
+				<eqn>29.2</eqn>
+				<units>J/mol/K</units>
+			</aux>
+			<aux name="leaf mass per area">
+				<doc>cL ¼ 815
+J m–2 K–1 for deciduous broadleaf trees (m a ¼ 73 g
+m–2 ) and 2937 J m–2 K–1 for evergreen needleleaf
+trees (m a ¼ 263 g m–2 )
+
+https://sci-hub.se/10.1017/9781107339217.011 
+p 156</doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<element subscript="conifer">
+					<eqn>.263*LAI</eqn>
+				</element>
+				<element subscript="broadleaf">
+					<eqn>.073*LAI</eqn>
+				</element>
+				<units>kg/m^2</units>
+			</aux>
+			<aux name="frac water">
+				<eqn>.7</eqn>
+			</aux>
+			<aux name="c water">
+				<eqn>4188</eqn>
+				<units>J/kg/K</units>
+			</aux>
+			<aux name="c dry leaf">
+				<eqn>1396</eqn>
+				<units>J/kg/K</units>
+			</aux>
+			<aux name="water leaf">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>0-evapotranspiration*0</eqn>
+			</aux>
+			<stock name="stomata\naperture">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>1</eqn>
+				<inflow>open</inflow>
+				<outflow>close</outflow>
+				<non_negative/>
+			</stock>
+			<flow name="close">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>0*(T_leaf - water_leaf + direct_solar_heat)</eqn>
+				<non_negative/>
+			</flow>
+			<aux name="photosynthesis">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>0*direct_solar_heat</eqn>
+			</aux>
+			<aux name="intercellular CO2">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>0*CO2_gradient*stomata_aperture + photosynthesis*0</eqn>
+			</aux>
+			<aux name="ambient CO2">
+				<doc>See Pallardy 2008, Fig 12.5</doc>
+				<eqn>420</eqn>
+				<units>ppm</units>
+			</aux>
+			<aux name="CO2 gradient">
+				<eqn>0*ambient_CO2+0*wind_velocity</eqn>
+			</aux>
+			<aux name="r tot adaxial">
+				<doc>eq 12.6 
+
+https://www.uv.mx/personal/tcarmona/files/2019/02/Pallardy-2008.pdf</doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>1/( 1/r_cuticular_adaxial + 1/(r_stomata_adaxial + r_intracellular_adaxial) ) + r_air_adaxial</eqn>
+				<units>s/m</units>
+			</aux>
+			<aux name="r intracellular adaxial">
+				<doc>table 12.3 Pallardy2008 </doc>
+				<eqn>17.5</eqn>
+				<units>s/m</units>
+			</aux>
+			<aux name="r stomata adaxial">
+				<eqn>100000000</eqn>
+			</aux>
+			<aux name="r air adaxial">
+				<doc>
+table 7.4
+
+r_air
+
+https://udspace.udel.edu/bitstream/handle/19716/2830/Chapter%207.%20Transpiration%20and%20the%20Ascent%20of%20Sap.pdf?sequence=8&amp;isAllowed=y
+
+
+Also small, deeply dissected leaves and
+compound leaves with small leafl ets tend to be cooler
+than large leaves because their thinner boundary layers
+permit more rapid transfer of sensible heat. Tibbals
+et al. (1964) reported that in quiet air broad leaves are
+considerably warmer than pine needles exposed to the
+same incident radiation. 
+
+(pallardy2008 -- p. 331) </doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<element subscript="conifer">
+					<eqn>1/(5.0 + 74.4*wind_velocity)*1000</eqn>
+				</element>
+				<element subscript="broadleaf">
+					<eqn>1/((3.2*wind_velocity+.52)/100)</eqn>
+				</element>
+				<units>s/m</units>
+			</aux>
+			<aux name="r cuticular adaxial">
+				<doc>.1 to 1
+
+https://udspace.udel.edu/bitstream/handle/19716/2830/Chapter%207.%20Transpiration%20and%20the%20Ascent%20of%20Sap.pdf?sequence=8&amp;isAllowed=y
+fig 7.1</doc>
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<element subscript="conifer">
+					<eqn>30303</eqn>
+				</element>
+				<element subscript="broadleaf">
+					<eqn>8500</eqn>
+				</element>
+				<units>s/m</units>
+			</aux>
+			<aux name="Converter 1" access="input"/>
+			<aux name="heat out">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>(convection+ evapotranspiration + longwave_emitted)</eqn>
+			</aux>
+			<aux name="heat in">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>(solar_heat+longwave_absorbed)</eqn>
+			</aux>
+			<aux name="photosynthetic efficiency">
+				<doc>10.1146/annurev-arplant-042809-112206</doc>
+				<eqn>.046</eqn>
+			</aux>
+			<aux name="air\ntemperature" access="input">
+				<eqn>{Enter equation for use when not hooked up to other models}</eqn>
+				<units>C</units>
+			</aux>
+			<aux name="tree air convection">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>(3600*2*LAI*cp*(T_leaf- air_temperature)/r_air_adaxial)*Converter_1</eqn>
+			</aux>
+			<aux name="solar dec correction" access="input">
+				<eqn>{Enter equation for use when not hooked up to other models}</eqn>
+			</aux>
+			<aux name="extinction" access="output" isee:autocreated="true">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>direct_solar_heat*EXP(-extinction_coefficient*LAI)</eqn>
+			</aux>
+			<aux name="extinction coefficient">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<element subscript="conifer">
+					<eqn>.52</eqn>
+				</element>
+				<element subscript="broadleaf">
+					<eqn>.7</eqn>
+				</element>
+			</aux>
+			<aux name="tree emissivity">
+				<doc>https://www.semanticscholar.org/paper/Determining-the-Leaf-Emissivity-of-Three-Crops-by-Chen/93b3b7a19a54a3a405edcd8bc1e14dfae3849d3c</doc>
+				<eqn>.98</eqn>
+			</aux>
+			<aux name="under tree convection">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>(3600*cp*(T_leaf- T_bulk)/r_air_adaxial)*Converter_1</eqn>
+				<units>J/hr</units>
+			</aux>
+			<aux name="convection">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>tree_air_convection + under_tree_convection</eqn>
+			</aux>
+			<aux name="solar heat">
+				<dimensions>
+					<dim name="Dimension_1"/>
+				</dimensions>
+				<eqn>direct_solar_heat - extinction</eqn>
+				<units>J/hr</units>
+			</aux>
+			<aux name="Tleafdiff">
+				<eqn>T_leaf[broadleaf]-T_leaf[conifer]</eqn>
+			</aux>
+			<aux name="Tdiff">
+				<eqn>T_bulk[broadleaf] - T_bulk[conifer]</eqn>
+			</aux>
+			<aux name="solardiff">
+				<eqn>solar_heat[broadleaf]-solar_heat[conifer]</eqn>
+			</aux>
+			<aux name="evapdiff">
+				<eqn>evapotranspiration[broadleaf]-evapotranspiration[conifer]</eqn>
+			</aux>
+			<aux name="longwavediff">
+				<eqn>(longwave_absorbed[broadleaf]-longwave_emitted[broadleaf]) - (longwave_absorbed[conifer]-longwave_emitted[conifer])</eqn>
+			</aux>
+			<aux name="convectiondiff">
+				<eqn>convection[broadleaf]-convection[conifer]</eqn>
+			</aux>
+		</variables>
+		<views>
+			<view isee:show_pages="false" background="white" page_width="822" page_height="575" isee:page_cols="3" isee:page_rows="4" isee:scroll_y="767.143" zoom="140" isee:popup_graphs_are_comparative="false" isee:enable_non_negative_highlights="false" type="stock_flow">
+				<style color="black" background="white" font_style="normal" font_weight="normal" text_decoration="none" text_align="center" vertical_text_align="center" font_color="black" font_family="Arial" font_size="10pt" padding="2" border_color="black" border_width="thin" border_style="none">
+					<stock color="blue" background="white" font_color="blue" font_size="9pt" label_side="top">
+						<shape type="rectangle" width="45" height="35"/>
+					</stock>
+					<flow color="blue" background="white" font_color="blue" font_size="9pt" label_side="bottom"/>
+					<isee:placeholder color="#228B22" background="white" font_color="#228B22" font_size="9pt" label_side="bottom"/>
+					<module color="blue" background="white" font_color="blue" font_size="9pt" label_side="top">
+						<shape type="rectangle" width="55" height="45"/>
+					</module>
+					<aux color="blue" background="white" font_color="blue" font_size="9pt" label_side="bottom">
+						<shape type="circle" radius="18"/>
+					</aux>
+					<group color="red" background="white" font_color="red" font_size="9pt"/>
+					<connector color="#FF007F" background="white" font_color="#FF007F" font_size="9pt" isee:thickness="1"/>
+					<text_box color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt"/>
+					<isee:loop_indicator color="black" background="white"/>
+					<numeric_display color="blue" background="white" font_size="9pt" isee:transparent="false"/>
+					<graph color="black" background="white" font_size="12pt" axis_color="#666666" grid_color="#C8C8C8" isee:graph_area_color="white" legend_position="bottom" isee:transparent="false" isee:hide_border="false" axis_title_font_style="normal" axis_title_font_weight="normal" axis_title_text_decoration="none" axis_title_text_align="center" axis_title_vertical_text_align="center" axis_title_font_color="black" axis_title_font_family="Arial" axis_title_font_size="12pt" axis_title_text_padding="2" axis_title_text_border_color="black" axis_title_text_border_width="thin" axis_title_text_border_style="none" axis_label_font_style="normal" axis_label_font_weight="normal" axis_label_text_decoration="none" axis_label_text_align="center" axis_label_vertical_text_align="center" axis_label_font_color="black" axis_label_font_family="Arial" axis_label_font_size="9pt" axis_label_text_padding="2" axis_label_text_border_color="black" axis_label_text_border_width="thin" axis_label_text_border_style="none">
+						<isee:series_styles>
+							<isee:series_style color="blue" thickness="1"/>
+							<isee:series_style color="red" thickness="1" pen_style="dot_dashed"/>
+							<isee:series_style color="fuchsia" thickness="1" pen_style="dotted"/>
+							<isee:series_style color="#008F44" thickness="1" pen_style="dashed"/>
+							<isee:series_style color="#FF7F00" thickness="1"/>
+							<isee:series_style color="#7F00FF" thickness="1" pen_style="dot_dashed"/>
+							<isee:series_style color="#0CA0FF" thickness="1" pen_style="dotted"/>
+							<isee:series_style color="lime" thickness="1" pen_style="dashed"/>
+							<isee:series_style color="#FF007F" thickness="1"/>
+							<isee:series_style color="aqua" thickness="1" pen_style="dot_dashed"/>
+							<isee:series_style color="#F586FF" thickness="1" pen_style="dotted"/>
+							<isee:series_style color="black" thickness="1" pen_style="dashed"/>
+							<isee:series_style color="#C8C8C8" thickness="1"/>
+						</isee:series_styles>
+					</graph>
+					<table color="black" background="#E0E0E0" text_align="right" font_size="12pt" orientation="vertical" wrap_text="false" isee:auto_fit="true" isee:use_alternate_row_colors="false" isee:unlimited_table_length="false" blank_column_width="80" column_width="160" interval="1" report_balances="beginning" report_flows="summed" header_font_style="normal" header_font_weight="normal" header_text_decoration="none" header_text_align="center" header_vertical_text_align="center" header_font_color="black" header_font_family="Arial" header_font_size="12pt" header_text_padding="2" header_text_border_color="black" header_text_border_width="thin" header_text_border_style="none"/>
+				</style>
+				<aux x="486.25" y="614.167" name="evapotranspiration"/>
+				<connector uid="1" angle="56.9369">
+					<from>evapotranspiration</from>
+					<to>heat_out</to>
+				</connector>
+				<aux x="386" y="347" name="longwave absorbed"/>
+				<aux x="396" y="673" name="latent heat vaporization water"/>
+				<connector uid="3" angle="33.0999">
+					<from>latent_heat_vaporization_water</from>
+					<to>evapotranspiration</to>
+				</connector>
+				<aux font_style="italic" font_weight="bold" x="475.917" y="329" name="emissivity"/>
+				<aux x="219.167" y="640.167" name="albedo leaf"/>
+				<connector uid="5" angle="73.9204">
+					<from>albedo_leaf</from>
+					<to>direct_solar_heat</to>
+				</connector>
+				<stacked_container uid="6" x="663.107" y="1149.61">
+					<graph isee:graph_area_color="white" width="350" height="250" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="25" num_y_grid_lines="2" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" to="144" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="false" pen_width="1" index="0" show_y_axis="true">
+							<entity name=".T[conifer]"/>
+							<scale min="10" max="35"/>
+						</plot>
+						<plot color="red" isee:keep_zero_visible="false" pen_width="1" index="1" show_y_axis="true">
+							<entity name=".T[broadleaf]"/>
+							<scale min="10" max="35"/>
+						</plot>
+						<plot color="#1818FF" pen_style="dashed" isee:keep_zero_visible="false" pen_width="1" index="2" show_y_axis="true">
+							<entity name="T_leaf[conifer]"/>
+							<scale min="10" max="35"/>
+						</plot>
+						<plot color="#FF2600" pen_style="dashed" isee:keep_zero_visible="false" pen_width="1" index="3" show_y_axis="true">
+							<entity name="T_leaf[broadleaf]"/>
+							<scale min="10" max="35"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<aux font_style="italic" font_weight="bold" x="457.917" y="279" name="sigma"/>
+				<connector uid="7" angle="191.336">
+					<from>sigma</from>
+					<to>longwave_absorbed</to>
+				</connector>
+				<aux font_style="italic" font_weight="bold" x="123" y="465.75" name="DNI"/>
+				<connector uid="8" angle="298.811">
+					<from>DNI</from>
+					<to>direct_solar_heat</to>
+				</connector>
+				<aux font_style="italic" font_weight="bold" x="115" y="552" name="sun anlgle"/>
+				<connector uid="9" angle="40.6013">
+					<from>sun_anlgle</from>
+					<to>direct_solar_heat</to>
+				</connector>
+				<aux x="786" y="347" name="heat coef"/>
+				<connector uid="14" angle="210.727">
+					<from>heat_coef</from>
+					<to>leaf_temp_out</to>
+				</connector>
+				<aux font_style="italic" font_weight="bold" x="322" y="762" name="wind velocity"/>
+				<aux x="172" y="512" name="direct solar heat"/>
+				<connector uid="17" angle="191.32">
+					<from>emissivity</from>
+					<to>longwave_absorbed</to>
+				</connector>
+				<aux x="626" y="583" name="C leaf"/>
+				<aux x="701" y="583" name="C air"/>
+				<aux x="1040" y="596.167" name="LAI"/>
+				<aux x="545" y="673" name="evapotranspiration rate"/>
+				<connector uid="18" angle="228.013">
+					<from>C_leaf</from>
+					<to>evapotranspiration_rate</to>
+				</connector>
+				<connector uid="19" angle="209.982">
+					<from>C_air</from>
+					<to>evapotranspiration_rate</to>
+				</connector>
+				<connector uid="20" angle="188.823">
+					<from>LAI</from>
+					<to>evapotranspiration_rate</to>
+				</connector>
+				<aux x="644" y="531" name="M w"/>
+				<connector uid="21" angle="250.907">
+					<from>M_w</from>
+					<to>C_leaf</to>
+				</connector>
+				<connector uid="22" angle="337.38">
+					<from>M_w</from>
+					<to>C_air</to>
+				</connector>
+				<aux x="668" y="593" name="R"/>
+				<connector uid="23" angle="198.435">
+					<from>R</from>
+					<to>C_leaf</to>
+				</connector>
+				<aux x="524" y="535" name="e s leaf"/>
+				<aux x="695" y="462.167" name="e s air"/>
+				<connector uid="24" angle="272.843">
+					<from>e_s_air</from>
+					<to>e_air</to>
+				</connector>
+				<connector uid="25" angle="355.236">
+					<from>e_s_leaf</from>
+					<to>C_leaf</to>
+				</connector>
+				<aux x="778" y="444.167" name="rh"/>
+				<connector uid="26" angle="25.71">
+					<from>R</from>
+					<to>C_air</to>
+				</connector>
+				<connector uid="27" angle="139.399">
+					<from>evapotranspiration_rate</from>
+					<to>evapotranspiration</to>
+				</connector>
+				<stock x="524" y="470.5" name="T leaf"/>
+				<connector uid="29" angle="270">
+					<from>T_leaf</from>
+					<to>e_s_leaf</to>
+				</connector>
+				<aux x="729" y="506" name="e air"/>
+				<connector uid="30" angle="279.728">
+					<from>e_air</from>
+					<to>C_air</to>
+				</connector>
+				<connector uid="31" angle="234.333">
+					<from>rh</from>
+					<to>e_air</to>
+				</connector>
+				<connector uid="32" angle="312.198">
+					<from>T_leaf</from>
+					<to>C_leaf</to>
+				</connector>
+				<aux x="732" y="886" name="r tot leaf"/>
+				<aux x="760" y="852" name="r tot abaxial"/>
+				<connector uid="33" angle="230.528">
+					<from>r_tot_abaxial</from>
+					<to>r_tot_leaf</to>
+				</connector>
+				<aux x="704" y="807" name="r cuticular abaxial"/>
+				<aux x="760" y="804" name="r intracellular abaxial"/>
+				<aux x="813" y="801" name="r stomata abaxial"/>
+				<connector uid="36" angle="315">
+					<from>r_cuticular_abaxial</from>
+					<to>r_tot_abaxial</to>
+				</connector>
+				<connector uid="37" angle="223.898">
+					<from>r_stomata_abaxial</from>
+					<to>r_tot_abaxial</to>
+				</connector>
+				<connector uid="38" angle="270">
+					<from>r_intracellular_abaxial</from>
+					<to>r_tot_abaxial</to>
+				</connector>
+				<aux x="909" y="825" name="r air abaxial"/>
+				<aux x="732" y="937" name="r tot"/>
+				<connector uid="39" angle="215.538">
+					<from>r_air_abaxial</from>
+					<to>r_tot_abaxial</to>
+				</connector>
+				<connector uid="40" angle="270">
+					<from>r_tot_leaf</from>
+					<to>r_tot</to>
+				</connector>
+				<flow x="475.833" y="894" name="open">
+					<pts>
+						<pt x="418.917" y="894"/>
+						<pt x="520.75" y="894"/>
+					</pts>
+				</flow>
+				<connector uid="46" angle="319.368">
+					<from>wind_velocity</from>
+					<to>open</to>
+				</connector>
+				<connector uid="49" angle="159.444">
+					<from>r_tot</from>
+					<to>evapotranspiration_rate</to>
+				</connector>
+				<flow x="471.25" y="476" name="leaf temp in">
+					<pts>
+						<pt x="429" y="476"/>
+						<pt x="501.5" y="476"/>
+					</pts>
+				</flow>
+				<flow x="580.75" y="469" name="leaf temp out">
+					<pts>
+						<pt x="546.5" y="469"/>
+						<pt x="627" y="469"/>
+					</pts>
+				</flow>
+				<stock font_style="italic" font_weight="bold" x="112.5" y="329.5" name="T bulk"/>
+				<connector uid="55" angle="171.87">
+					<from>heat_coef</from>
+					<to>leaf_temp_in</to>
+				</connector>
+				<connector uid="56" angle="26.9958">
+					<from>T_bulk</from>
+					<to>longwave_absorbed</to>
+				</connector>
+				<aux x="538.75" y="191" name="temp"/>
+				<aux x="778" y="237" name="heat capacity leaf"/>
+				<connector uid="68" angle="289.983">
+					<from>heat_capacity_leaf</from>
+					<to>heat_coef</to>
+				</connector>
+				<aux x="556.75" y="320" name="longwave emitted"/>
+				<connector uid="71" angle="17.3118">
+					<from>sigma</from>
+					<to>longwave_emitted</to>
+				</connector>
+				<connector uid="72" angle="71.3421">
+					<from>T_leaf</from>
+					<to>longwave_emitted</to>
+				</connector>
+				<connector uid="73" angle="295.545">
+					<from>longwave_emitted</from>
+					<to>heat_out</to>
+				</connector>
+				<connector uid="74" angle="303.459">
+					<from>longwave_absorbed</from>
+					<to>heat_in</to>
+				</connector>
+				<connector uid="75" angle="63.4349">
+					<from>LAI</from>
+					<to>longwave_emitted</to>
+				</connector>
+				<aux x="34" y="408.5" name="cp"/>
+				<aux x="931" y="329.5" name="leaf mass per area"/>
+				<aux x="971" y="191" name="frac water"/>
+				<aux x="953" y="274" name="c water"/>
+				<aux x="980" y="237" name="c dry leaf"/>
+				<connector uid="80" angle="148.844">
+					<from>leaf_mass_per_area</from>
+					<to>heat_capacity_leaf</to>
+				</connector>
+				<connector uid="81" angle="160.145">
+					<from>frac_water</from>
+					<to>heat_capacity_leaf</to>
+				</connector>
+				<connector uid="82" angle="167.125">
+					<from>c_dry_leaf</from>
+					<to>heat_capacity_leaf</to>
+				</connector>
+				<connector uid="83" angle="148.173">
+					<from>c_water</from>
+					<to>heat_capacity_leaf</to>
+				</connector>
+				<connector uid="84" angle="62.1759">
+					<from>LAI</from>
+					<to>leaf_mass_per_area</to>
+				</connector>
+				<connector uid="85" angle="174.462">
+					<from>LAI</from>
+					<to>direct_solar_heat</to>
+				</connector>
+				<stacked_container uid="86" x="913" y="921" width="350" height="310.61">
+					<graph isee:graph_area_color="white" width="350" height="310.61" type="time_series" show_grid="true" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="2" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="red" pen_style="dot_dashed" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="T_leaf[conifer]"/>
+						</plot>
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="T_leaf[broadleaf]"/>
+						</plot>
+						<plot color="fuchsia" pen_style="dotted" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name="T_leaf[conifer]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<aux x="322" y="857" name="water leaf"/>
+				<connector uid="87" polarity="-" isee:polarity_placement="outside" angle="281.617">
+					<from>evapotranspiration</from>
+					<to>water_leaf</to>
+				</connector>
+				<stock x="543.25" y="894" name="stomata\naperture"/>
+				<flow x="588.875" y="898" name="close">
+					<pts>
+						<pt x="565.75" y="898"/>
+						<pt x="636" y="898"/>
+					</pts>
+				</flow>
+				<connector uid="88" angle="296.565">
+					<from>water_leaf</from>
+					<to>close</to>
+				</connector>
+				<connector uid="90" angle="34.8933">
+					<from>stomata_aperture</from>
+					<to>r_stomata_abaxial</to>
+				</connector>
+				<connector uid="91" polarity="+" isee:polarity_placement="outside" angle="14.8265">
+					<from>direct_solar_heat</from>
+					<to>close</to>
+				</connector>
+				<aux x="105" y="721" name="photosynthesis"/>
+				<connector uid="92" angle="277.125">
+					<from>direct_solar_heat</from>
+					<to>photosynthesis</to>
+				</connector>
+				<aux x="97" y="792" name="intercellular CO2"/>
+				<connector uid="93" angle="297.255">
+					<from>photosynthesis</from>
+					<to>intercellular_CO2</to>
+				</connector>
+				<connector uid="94" angle="7.35238">
+					<from>intercellular_CO2</from>
+					<to>open</to>
+				</connector>
+				<connector uid="95" angle="137.767">
+					<from>stomata_aperture</from>
+					<to>intercellular_CO2</to>
+				</connector>
+				<aux x="39" y="676.167" name="ambient CO2"/>
+				<aux x="42" y="766" name="CO2 gradient"/>
+				<connector uid="96" angle="151.821">
+					<from>wind_velocity</from>
+					<to>CO2_gradient</to>
+				</connector>
+				<connector uid="97" angle="284.099">
+					<from>ambient_CO2</from>
+					<to>CO2_gradient</to>
+				</connector>
+				<connector uid="98" angle="345.174">
+					<from>CO2_gradient</from>
+					<to>intercellular_CO2</to>
+				</connector>
+				<connector uid="99" angle="258.261">
+					<from>T_leaf</from>
+					<to>close</to>
+				</connector>
+				<aux x="804" y="898" name="r tot adaxial"/>
+				<connector uid="100" angle="167.125">
+					<from>r_tot_adaxial</from>
+					<to>r_tot_leaf</to>
+				</connector>
+				<aux x="862" y="912" name="r intracellular adaxial"/>
+				<aux x="857" y="947" name="r stomata adaxial"/>
+				<connector uid="102" angle="163.009">
+					<from>r_intracellular_adaxial</from>
+					<to>r_tot_adaxial</to>
+				</connector>
+				<connector uid="103" angle="137.49">
+					<from>r_stomata_adaxial</from>
+					<to>r_tot_adaxial</to>
+				</connector>
+				<aux x="935" y="886" name="r air adaxial"/>
+				<connector uid="104" angle="152.103">
+					<from>r_air_adaxial</from>
+					<to>r_tot_adaxial</to>
+				</connector>
+				<connector uid="105" angle="4.76364">
+					<from>wind_velocity</from>
+					<to>r_air_adaxial</to>
+				</connector>
+				<aux x="865" y="876" name="r cuticular adaxial"/>
+				<connector uid="101" angle="192.875">
+					<from>r_cuticular_adaxial</from>
+					<to>r_tot_adaxial</to>
+				</connector>
+				<aux font_style="italic" font_weight="bold" x="60" y="524" name="Converter 1"/>
+				<stacked_container uid="111" x="863.714" y="1554.32" width="371" height="485">
+					<graph isee:graph_area_color="white" width="371" height="485" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="evapotranspiration[conifer]"/>
+						</plot>
+						<plot color="#FF7F00" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="longwave_absorbed[conifer]"/>
+						</plot>
+						<plot color="#00FDFF" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name="longwave_emitted[conifer]"/>
+						</plot>
+						<plot color="#942192" isee:keep_zero_visible="true" pen_width="1" index="3" show_y_axis="true">
+							<entity name="convection[conifer]"/>
+						</plot>
+						<plot color="#FF2600" isee:keep_zero_visible="true" pen_width="1" index="4" show_y_axis="true">
+							<entity name="solar_heat[conifer]"/>
+							<scale max="500000"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<stacked_container uid="112" x="663.107" y="1415.61">
+					<graph isee:graph_area_color="white" width="350" height="250" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="longwave_emitted[*]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<stacked_container uid="113" x="878.25" y="1274.61" width="350" height="267.39">
+					<graph isee:graph_area_color="white" width="350" height="267.39" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="false" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="false" pen_width="1" index="0" show_y_axis="true">
+							<entity name="T_leaf[conifer]"/>
+							<scale min="10"/>
+						</plot>
+						<plot color="red" isee:keep_zero_visible="false" pen_width="1" index="1" show_y_axis="true">
+							<entity name="T_leaf[conifer]"/>
+							<scale min="10"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<aux x="600.75" y="511" name="heat out"/>
+				<connector uid="114" angle="109.502">
+					<from>heat_out</from>
+					<to>leaf_temp_out</to>
+				</connector>
+				<aux x="471.25" y="513" name="heat in"/>
+				<connector uid="115" angle="85.0882">
+					<from>heat_in</from>
+					<to>leaf_temp_in</to>
+				</connector>
+				<stacked_container uid="116" x="23.5357" y="1552.47" width="408" height="355">
+					<graph isee:graph_area_color="white" width="408" height="355" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="false" pen_width="1" index="0" show_y_axis="true">
+							<entity name=".T[conifer]"/>
+							<scale min="15" max="30"/>
+						</plot>
+						<plot color="red" pen_style="dot_dashed" isee:keep_zero_visible="false" pen_width="1" index="1" show_y_axis="true">
+							<entity name=".T[conifer]"/>
+							<scale min="15" max="30"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<aux x="190" y="444.167" name="photosynthetic efficiency"/>
+				<connector uid="117" angle="282.791">
+					<from>photosynthetic_efficiency</from>
+					<to>direct_solar_heat</to>
+				</connector>
+				<stacked_container uid="118" x="109.286" y="924.571" width="227" height="238">
+					<graph isee:graph_area_color="white" width="227" height="238" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="3" num_y_labels="3" isee:fill_intensity="0.1" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="evapotranspiration[conifer]"/>
+						</plot>
+						<plot color="red" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="evapotranspiration[broadleaf]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<connector uid="45" angle="14.7436">
+					<from>wind_velocity</from>
+					<to>r_air_abaxial</to>
+				</connector>
+				<connector uid="121" angle="28.4995">
+					<from>Converter_1</from>
+					<to>longwave_absorbed</to>
+				</connector>
+				<connector uid="122" angle="17.354">
+					<from>Converter_1</from>
+					<to>direct_solar_heat</to>
+				</connector>
+				<connector uid="123" angle="66.5014">
+					<from>Converter_1</from>
+					<to>heat_coef</to>
+				</connector>
+				<connector uid="124" angle="58.5704">
+					<from>Converter_1</from>
+					<to>longwave_emitted</to>
+				</connector>
+				<connector uid="125" angle="1.90915">
+					<from>Converter_1</from>
+					<to>evapotranspiration</to>
+				</connector>
+				<aux font_style="italic" font_weight="bold" x="258.5" y="366" name="air\ntemperature"/>
+				<connector uid="128" angle="19.9831">
+					<from>air_temperature</from>
+					<to>tree_air_convection</to>
+				</connector>
+				<aux x="308" y="348" name="tree air convection"/>
+				<connector uid="129" angle="37.6476">
+					<from>Converter_1</from>
+					<to>tree_air_convection</to>
+				</connector>
+				<connector uid="130" angle="140.194">
+					<from>r_air_adaxial</from>
+					<to>tree_air_convection</to>
+				</connector>
+				<connector uid="131" angle="36.2095">
+					<from>cp</from>
+					<to>tree_air_convection</to>
+				</connector>
+				<connector uid="133" angle="146.476">
+					<from>T_leaf</from>
+					<to>tree_air_convection</to>
+				</connector>
+				<aux font_style="italic" font_weight="bold" x="122" y="595" name="solar dec correction"/>
+				<connector uid="140" angle="62.7004">
+					<from>solar_dec_correction</from>
+					<to>direct_solar_heat</to>
+				</connector>
+				<connector uid="141" angle="38.9559">
+					<from>air_temperature</from>
+					<to>e_s_air</to>
+				</connector>
+				<connector uid="142" angle="32.8687">
+					<from>air_temperature</from>
+					<to>C_air</to>
+				</connector>
+				<aux x="272" y="596.167" name="extinction"/>
+				<aux x="346" y="595" name="extinction coefficient"/>
+				<connector uid="143" angle="197.714">
+					<from>LAI</from>
+					<to>extinction</to>
+				</connector>
+				<connector uid="144" angle="150.803">
+					<from>extinction_coefficient</from>
+					<to>extinction</to>
+				</connector>
+				<connector uid="145" angle="334.722">
+					<from>direct_solar_heat</from>
+					<to>extinction</to>
+				</connector>
+				<aux x="479" y="366" name="tree emissivity"/>
+				<connector uid="146" angle="41.1859">
+					<from>tree_emissivity</from>
+					<to>longwave_emitted</to>
+				</connector>
+				<aux x="311" y="435" name="under tree convection"/>
+				<connector uid="148" angle="12.6334">
+					<from>cp</from>
+					<to>under_tree_convection</to>
+				</connector>
+				<connector uid="149" angle="116.565">
+					<from>r_air_adaxial</from>
+					<to>under_tree_convection</to>
+				</connector>
+				<connector uid="150" angle="352.626">
+					<from>T_bulk</from>
+					<to>under_tree_convection</to>
+				</connector>
+				<connector uid="152" angle="30.9638">
+					<from>Converter_1</from>
+					<to>under_tree_convection</to>
+				</connector>
+				<stacked_container uid="155" x="444.536" y="1552.47" width="408" height="355">
+					<graph isee:graph_area_color="white" width="408" height="355" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name=".T[conifer]"/>
+						</plot>
+						<plot color="red" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name=".T[broadleaf]"/>
+						</plot>
+						<plot color="fuchsia" pen_style="dotted" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name=".T[conifer]"/>
+						</plot>
+						<plot color="#008F44" pen_style="dashed" isee:keep_zero_visible="true" pen_width="1" index="3" show_y_axis="true">
+							<entity name=".T[broadleaf]"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<aux x="549.75" y="593" name="convection"/>
+				<connector uid="156" angle="310.462">
+					<from>under_tree_convection</from>
+					<to>convection</to>
+				</connector>
+				<connector uid="157" angle="316.469">
+					<from>tree_air_convection</from>
+					<to>convection</to>
+				</connector>
+				<connector uid="151" angle="147.019">
+					<from>T_leaf</from>
+					<to>under_tree_convection</to>
+				</connector>
+				<connector uid="132" angle="117.997">
+					<from>LAI</from>
+					<to>tree_air_convection</to>
+				</connector>
+				<connector uid="158" angle="61.8656">
+					<from>convection</from>
+					<to>heat_out</to>
+				</connector>
+				<aux x="304.357" y="483.75" name="solar heat"/>
+				<connector uid="159" angle="26.5651">
+					<from>direct_solar_heat</from>
+					<to>solar_heat</to>
+				</connector>
+				<connector uid="160" angle="81.6241">
+					<from>extinction</from>
+					<to>solar_heat</to>
+				</connector>
+				<connector uid="161" angle="22.7443">
+					<from>solar_heat</from>
+					<to>heat_in</to>
+				</connector>
+				<stacked_container uid="162" x="1246.86" y="1554.32" width="371" height="485">
+					<graph isee:graph_area_color="white" width="371" height="485" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="evapotranspiration[broadleaf]"/>
+						</plot>
+						<plot color="#FF7F00" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="longwave_absorbed[broadleaf]"/>
+						</plot>
+						<plot color="#00FDFF" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name="longwave_emitted[broadleaf]"/>
+						</plot>
+						<plot color="#942192" isee:keep_zero_visible="true" pen_width="1" index="3" show_y_axis="true">
+							<entity name="convection[broadleaf]"/>
+						</plot>
+						<plot color="#FF2600" isee:keep_zero_visible="true" pen_width="1" index="4" show_y_axis="true">
+							<entity name="solar_heat[broadleaf]"/>
+							<scale max="500000"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<stacked_container uid="163" x="1252.93" y="1281.39" width="252.964" height="229.22">
+					<graph isee:graph_area_color="white" width="252.964" height="229.22" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="3" num_y_labels="3" isee:fill_intensity="0.1" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="black" pen_style="dashed" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="Tleafdiff"/>
+						</plot>
+						<plot color="black" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="Tdiff"/>
+						</plot>
+						<plot color="#5E5E5E" pen_style="dashed" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name="Tleafdiff"/>
+						</plot>
+						<plot color="#5E5E5E" isee:keep_zero_visible="true" pen_width="1" index="3" show_y_axis="true">
+							<entity name="Tdiff"/>
+						</plot>
+						<plot color="#A9A9A9" pen_style="dashed" isee:keep_zero_visible="true" pen_width="1" index="4" show_y_axis="true">
+							<entity name="Tleafdiff"/>
+						</plot>
+						<plot color="#A9A9A9" isee:keep_zero_visible="true" pen_width="1" index="5" show_y_axis="true">
+							<entity name="Tdiff"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<aux x="1161.36" y="557.5" name="Tleafdiff"/>
+				<connector uid="165" angle="352.227">
+					<from>T_leaf</from>
+					<to>Tleafdiff</to>
+				</connector>
+				<aux x="1152.25" y="338" name="Tdiff"/>
+				<connector uid="166" angle="359.532">
+					<from>T_bulk</from>
+					<to>Tdiff</to>
+				</connector>
+				<stacked_container uid="167" x="164.107" y="1167.71" width="305.464" height="368.47">
+					<graph isee:graph_area_color="white" width="305.464" height="368.47" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="3" num_y_labels="3" isee:fill_intensity="0.1" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="black" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="Tdiff"/>
+						</plot>
+						<plot color="#5E5E5E" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="Tdiff"/>
+						</plot>
+						<plot color="#A9A9A9" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name="Tdiff"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<aux x="1158" y="494" name="solardiff"/>
+				<aux x="1161.36" y="721" name="evapdiff"/>
+				<connector uid="169" angle="26.0543">
+					<from>evapotranspiration</from>
+					<to>evapdiff</to>
+				</connector>
+				<aux x="1140" y="413.75" name="longwavediff"/>
+				<connector uid="170" angle="25.6102">
+					<from>longwave_absorbed</from>
+					<to>longwavediff</to>
+				</connector>
+				<connector uid="171" angle="34.2005">
+					<from>longwave_emitted</from>
+					<to>longwavediff</to>
+				</connector>
+				<connector uid="172" angle="340.065">
+					<from>solar_heat</from>
+					<to>solardiff</to>
+				</connector>
+				<aux x="1152.25" y="622.167" name="convectiondiff"/>
+				<connector uid="173" angle="40.8151">
+					<from>convection</from>
+					<to>convectiondiff</to>
+				</connector>
+				<stacked_container uid="174" x="1633.29" y="1558.61" width="360.994" height="437.857">
+					<graph isee:graph_area_color="white" width="360.994" height="437.857" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" from="120" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="blue" isee:keep_zero_visible="true" pen_width="1" index="0" show_y_axis="true">
+							<entity name="evapdiff"/>
+						</plot>
+						<plot color="#00FDFF" isee:keep_zero_visible="true" pen_width="1" index="1" show_y_axis="true">
+							<entity name="longwavediff"/>
+						</plot>
+						<plot color="#942192" isee:keep_zero_visible="true" pen_width="1" index="2" show_y_axis="true">
+							<entity name="convectiondiff"/>
+						</plot>
+						<plot color="#FF2600" isee:keep_zero_visible="true" pen_width="1" index="3" show_y_axis="true">
+							<entity name="solardiff"/>
+						</plot>
+					</graph>
+				</stacked_container>
+			</view>
+		</views>
+	</model>
+	<isee:controls>
+		<isee:control priority="imex" name="DNI" type="exog">
+			<exog type="interpolate" pairs="(0,0),(0.5,0),(1,0),(1.5,0),(2,0),(2.5,0),(3,0),(3.5,0),(4,0),(4.5,0),(5,76),(5.5,176),(6,131),(6.5,414),(7,611),(7.5,673),(8,721),(8.5,760),(9,791),(9.5,820),(10,849),(10.5,863),(11,875),(11.5,882),(12,888),(12.5,888),(13,884),(13.5,879),(14,874),(14.5,864),(15,851),(15.5,831),(16,804),(16.5,770),(17,726),(17.5,673),(18,605),(18.5,510),(19,378),(19.5,186),(20,0),(20.5,0),(21,0),(21.5,0),(22,0),(22.5,0),(23,0),(23.5,0),(24,0),(24.5,0),(25,0),(25.5,0),(26,0),(26.5,0),(27,0),(27.5,0),(28,0),(28.5,0),(29,76),(29.5,176),(30,131),(30.5,414),(31,611),(31.5,673),(32,721),(32.5,760),(33,791),(33.5,820),(34,849),(34.5,863),(35,875),(35.5,882),(36,888),(36.5,888),(37,884),(37.5,879),(38,874),(38.5,864),(39,851),(39.5,831),(40,804),(40.5,770),(41,726),(41.5,673),(42,605),(42.5,510),(43,378),(43.5,186),(44,0),(44.5,0),(45,0),(45.5,0),(46,0),(46.5,0),(47,0),(47.5,0),(48,0),(48.5,0),(49,0),(49.5,0),(50,0),(50.5,0),(51,0),(51.5,0),(52,0),(52.5,0),(53,76),(53.5,176),(54,131),(54.5,414),(55,611),(55.5,673),(56,721),(56.5,760),(57,791),(57.5,820),(58,849),(58.5,863),(59,875),(59.5,882),(60,888),(60.5,888),(61,884),(61.5,879),(62,874),(62.5,864),(63,851),(63.5,831),(64,804),(64.5,770),(65,726),(65.5,673),(66,605),(66.5,510),(67,378),(67.5,186),(68,0),(68.5,0),(69,0),(69.5,0),(70,0),(70.5,0),(71,0),(71.5,0),(72,0),(72.5,0),(73,0),(73.5,0),(74,0),(74.5,0),(75,0),(75.5,0),(76,0),(76.5,0),(77,76),(77.5,176),(78,131),(78.5,414),(79,611),(79.5,673),(80,721),(80.5,760),(81,791),(81.5,820),(82,849),(82.5,863),(83,875),(83.5,882),(84,888),(84.5,888),(85,884),(85.5,879),(86,874),(86.5,864),(87,851),(87.5,831),(88,804),(88.5,770),(89,726),(89.5,673),(90,605),(90.5,510),(91,378),(91.5,186),(92,0),(92.5,0),(93,0),(93.5,0),(94,0),(94.5,0),(95,0),(95.5,0),(96,0),(96.5,0),(97,0),(97.5,0),(98,0),(98.5,0),(99,0),(99.5,0),(100,0),(100.5,0),(101,76),(101.5,176),(102,131),(102.5,414),(103,611),(103.5,673),(104,721),(104.5,760),(105,791),(105.5,820),(106,849),(106.5,863),(107,875),(107.5,882),(108,888),(108.5,888),(109,884),(109.5,879),(110,874),(110.5,864),(111,851),(111.5,831),(112,804),(112.5,770),(113,726),(113.5,673),(114,605),(114.5,510),(115,378),(115.5,186),(116,0),(116.5,0),(117,0),(117.5,0),(118,0),(118.5,0),(119,0),(119.5,0),(120,0),(120.5,0),(121,0),(121.5,0),(122,0),(122.5,0),(123,0),(123.5,0),(124,0),(124.5,0),(125,76),(125.5,176),(126,131),(126.5,414),(127,611),(127.5,673),(128,721),(128.5,760),(129,791),(129.5,820),(130,849),(130.5,863),(131,875),(131.5,882),(132,888),(132.5,888),(133,884),(133.5,879),(134,874),(134.5,864),(135,851),(135.5,831),(136,804),(136.5,770),(137,726),(137.5,673),(138,605),(138.5,510),(139,378),(139.5,186),(140,0),(140.5,0),(141,0),(141.5,0),(142,0),(142.5,0),(143,0),(143.5,0)"/>
+		</isee:control>
+	</isee:controls>
+</xmile>
+
